@@ -113,6 +113,13 @@ public class IpFilterRuleTest extends TestCase
             }
 
             @Override
+            public ChannelFuture shutdownOutput()
+            {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
             public ChannelFuture connect(SocketAddress remoteAddress)
             {
                 // TODO Auto-generated method stub

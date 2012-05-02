@@ -55,6 +55,7 @@ public abstract class AbstractChannel implements Channel {
     private final ChannelFuture succeededFuture = new SucceededChannelFuture(this);
     private final ChannelCloseFuture closeFuture = new ChannelCloseFuture();
     private volatile int interestOps = OP_READ;
+    private boolean handleHalfClose = false;
 
     /** Cache for the string representation of this channel */
     private boolean strValConnected;
@@ -178,6 +179,14 @@ public abstract class AbstractChannel implements Channel {
         return !closeFuture.isDone();
     }
 
+    public void setHandleHalfClose(boolean value) {
+        handleHalfClose = value;
+    }
+
+    public boolean getHandleHalfClose() {
+        return handleHalfClose;
+    }
+
     /**
      * Marks this channel as closed.  This method is intended to be called by
      * an internal component - please do not call it unless you know what you
@@ -209,6 +218,12 @@ public abstract class AbstractChannel implements Channel {
         ChannelFuture returnedCloseFuture = Channels.close(this);
         assert closeFuture == returnedCloseFuture;
         return closeFuture;
+    }
+
+    @Override
+    public ChannelFuture shutdownOutput() {
+        ChannelFuture returnedFuture = Channels.shutdownOutput(this);
+        return returnedFuture;
     }
 
     @Override

@@ -137,6 +137,8 @@ public interface Channel extends Comparable<Channel> {
      */
     static int OP_READ_WRITE = OP_READ | OP_WRITE;
 
+    static int OP_HALF_CLOSE = 8;
+
     /**
      * Returns the unique integer ID of this channel.
      */
@@ -300,6 +302,8 @@ public interface Channel extends Comparable<Channel> {
      */
     ChannelFuture close();
 
+    ChannelFuture shutdownOutput();
+
     /**
      * Returns the {@link ChannelFuture} which will be notified when this
      * channel is closed.  This method always returns the same future instance.
@@ -334,6 +338,10 @@ public interface Channel extends Comparable<Channel> {
      * </pre>
      */
     boolean isWritable();
+
+    void setHandleHalfClose(boolean value);
+
+    boolean getHandleHalfClose();
 
     /**
      * Changes the {@code interestOps} of this channel asynchronously.

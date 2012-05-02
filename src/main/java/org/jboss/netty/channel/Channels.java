@@ -425,6 +425,34 @@ public class Channels {
     }
 
     /**
+     * Sends a {@code "channelReadClosed"} event to the first
+     * {@link ChannelUpstreamHandler} in the {@link ChannelPipeline} of
+     * the specified {@link Channel}.
+     */
+    public static void fireChannelReadClosed(Channel channel) {
+        channel.getPipeline().sendUpstream(
+                new UpstreamChannelStateEvent(
+                        channel, ChannelState.OPEN, "write only"));
+
+        // Notify the parent handler.
+        if (channel.getParent() != null) {
+            fireChildChannelStateChanged(channel.getParent(), channel);
+        }
+    }
+
+    /**
+     * Sends a {@code "channelReadClosed"} event to the
+     * {@link ChannelUpstreamHandler} which is placed in the closest upstream
+     * from the handler associated with the specified
+     * {@link ChannelHandlerContext}.
+     */
+    public static void fireChannelReadClosed(ChannelHandlerContext ctx) {
+        ctx.sendUpstream(
+                new UpstreamChannelStateEvent(
+                        ctx.getChannel(), ChannelState.OPEN, "write only"));
+    }
+
+    /**
      * Sends a {@code "exceptionCaught"} event to the first
      * {@link ChannelUpstreamHandler} in the {@link ChannelPipeline} of
      * the specified {@link Channel}.
@@ -738,12 +766,47 @@ public class Channels {
                 ctx.getChannel(), future, ChannelState.OPEN, Boolean.FALSE));
     }
 
+    /**
+     * Sends a {@code "shutdownOutput"} request to the last
+     * {@link ChannelDownstreamHandler} in the {@link ChannelPipeline} of
+     * the specified {@link Channel}.
+     *
+     * @param channel  the channel to shutdownOutput
+     *
+     * @return the {@link ChannelFuture} which will be notified on closure
+     */
+    public static ChannelFuture shutdownOutput(Channel channel) {
+        ChannelFuture future = future(channel);
+        channel.getPipeline().sendDownstream(new DownstreamChannelStateEvent(
+                channel, future, ChannelState.OPEN, "read only"));
+        return future;
+    }
+
+    /**
+     * Sends a {@code "shutdownOutput"} request to the
+     * {@link ChannelDownstreamHandler} which is placed in the shutdownOutputst
+     * downstream from the handler associated with the specified
+     * {@link ChannelHandlerContext}.
+     *
+     * @param ctx     the context
+     * @param future  the future which will be notified on closure
+     */
+    public static void shutdownOutput(
+            ChannelHandlerContext ctx, ChannelFuture future) {
+        ctx.sendDownstream(new DownstreamChannelStateEvent(
+                ctx.getChannel(), future, ChannelState.OPEN, "read only"));
+    }
+
     private static void validateInterestOps(int interestOps) {
         switch (interestOps) {
         case Channel.OP_NONE:
         case Channel.OP_READ:
         case Channel.OP_WRITE:
         case Channel.OP_READ_WRITE:
+        case Channel.OP_HALF_CLOSE:
+        case Channel.OP_READ | Channel.OP_HALF_CLOSE:
+        case Channel.OP_WRITE | Channel.OP_HALF_CLOSE:
+        case Channel.OP_READ_WRITE | Channel.OP_HALF_CLOSE:
             break;
         default:
             throw new IllegalArgumentException(

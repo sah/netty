@@ -87,6 +87,8 @@ class NioClientSocketPipelineSink extends AbstractChannelSink {
             case OPEN:
                 if (Boolean.FALSE.equals(value)) {
                     channel.worker.close(channel, future);
+                } else if ("read only".equals(value)) {
+                    channel.worker.shutdownOutput(channel, future);
                 }
                 break;
             case BOUND:
